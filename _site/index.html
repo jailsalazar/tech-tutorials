@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+
+    
+    <meta charset="UTF-8">
+
+<!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>Getting Started with Flair | A tutorial to create a custom review sentiment text classifier using Flair</title>
+<meta name="generator" content="Jekyll v3.9.0" />
+<meta property="og:title" content="Getting Started with Flair" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A tutorial to create a custom review sentiment text classifier using Flair" />
+<meta property="og:description" content="A tutorial to create a custom review sentiment text classifier using Flair" />
+<link rel="canonical" href="http://localhost:4000/" />
+<meta property="og:url" content="http://localhost:4000/" />
+<meta property="og:site_name" content="Getting Started with Flair" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Getting Started with Flair" />
+<script type="application/ld+json">
+{"headline":"Getting Started with Flair","url":"http://localhost:4000/","@type":"WebSite","description":"A tutorial to create a custom review sentiment text classifier using Flair","name":"Getting Started with Flair","@context":"https://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="preload" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap" as="style" type="text/css" crossorigin>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#157878">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="/assets/css/style.css?v=26479e49bd7f7db474ab92f652370d8eebd623fe">
+  </head>
+  <body>
+    <header class="page-header" role="banner">
+      <h1 class="project-name">Getting Started with Flair</h1>
+      <h2 class="project-tagline">A tutorial to create a custom review sentiment text classifier using Flair</h2>
+        <a href="https://github.com/uazhlt-ms-program/technical-tutorial-jailsalazar" class="btn" target="_blank">View on GitHub</a>
+      
+    </header>
+
+    <main id="content" class="main-content" role="main">
+      <p>Ever wondered how long it will take to create a custom text classifier? This tutorial will demonstrate the process of easily creating a custom text classifier using Flair to predict product review ratings. This tutorial will highlight the following steps:</p>
+<ul>
+  <li>Loading a dataset</li>
+  <li>Training a classifer</li>
+  <li>Predicting a label</li>
+</ul>
+
+<h1 id="what-is-flair">What is Flair?</h1>
+<p><a href="https://github.com/flairNLP/flair">Flair</a> is an NLP library that supports named entity recognition, part-of-speech tagging, sense disambigusation and classification. Developed by Zalando Research, Flair supports a variety of natural languages out-of-the-box including English, Spanish, German and Dutch. Built directly on PyTorch, the Flair framework provides quick access to training models and trying out custom embeddings and labels.</p>
+
+<h1 id="prerequisites">Prerequisites</h1>
+<ol>
+  <li>Python 3.6+</li>
+  <li>Flair</li>
+</ol>
+
+<h1 id="installing-flair">Installing Flair</h1>
+<p>To install Flair to your python project, execute the following pip command:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip install flair
+</code></pre></div></div>
+<p>Easy right?!</p>
+
+<h1 id="library-imports">Library Imports</h1>
+<p>The tutorial will use the following set of imports from the Flair library:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">flair.data</span> <span class="kn">import</span> <span class="n">Sentence</span><span class="p">,</span> <span class="n">Corpus</span>
+<span class="kn">from</span> <span class="nn">flair.datasets</span> <span class="kn">import</span> <span class="n">ClassificationCorpus</span>
+<span class="kn">from</span> <span class="nn">flair.embeddings</span> <span class="kn">import</span> <span class="n">WordEmbeddings</span><span class="p">,</span> <span class="n">DocumentRNNEmbeddings</span><span class="p">,</span> <span class="n">FlairEmbeddings</span>
+<span class="kn">from</span> <span class="nn">flair.models</span> <span class="kn">import</span> <span class="n">TextClassifier</span>
+<span class="kn">from</span> <span class="nn">flair.trainers</span> <span class="kn">import</span> <span class="n">ModelTrainer</span>
+</code></pre></div></div>
+
+<h1 id="loading-a-corpus">Loading a Corpus</h1>
+<p>For this tutorial, we are using a downsized sample of the <a href="https://www.kaggle.com/bittlingmayer/amazonreviews"><em>Amazon Reviews for Sentiment Analysis</em></a> dataset available on Kaggle. This dataset features over a million Amazon reviews that have been parsed to fastText format. The dataset contains tagged reviews representing two labels: 1 and 2.</p>
+
+<ul>
+  <li>Label 1: Corresponds to 1- and 2-star reviews</li>
+  <li>Label 2: Corresponds to 4- and 5-star reviews</li>
+</ul>
+
+<p><em>Reviews that had a 3-star rating were considered neutral and discarded from dataset</em>
+Training data examples:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>__label__1 sucks: overrated fan. just go to lowes or home depot and save money and get something you can return in person.
+__label__2 excellent Blue Ray movie: This 5 disk set for $27 is a good deal. 3 blue ray disks and two DVD disks are in the box.
+</code></pre></div></div>
+<p>Flair also supports <a href="https://github.com/flairNLP/flair/blob/master/resources/docs/TUTORIAL_6_CORPUS.md#load-from-simple-csv-file">loading datasets in csv format</a>.</p>
+
+<p>The original dataset was downsized into three seperate files:</p>
+
+<ul>
+  <li>train.txt: Reduced to 8000 lines.</li>
+  <li>dev.txt: Reduced to 1000 lines.</li>
+  <li>test.txt: Reduced to 1000 lines.</li>
+</ul>
+
+<p>To create the corpus, we will use the Flair <code class="language-plaintext highlighter-rouge">ClassificationCorpus</code> class to load our datasets:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Path to data files
+</span><span class="n">data_path</span> <span class="o">=</span> <span class="s">'../data'</span>
+<span class="c1"># Load corpus (If datasets are names like below, the test_file, dev_file 
+# and train_file fields do not need to be specfied and can be removed from line below.)
+</span><span class="n">corpus</span> <span class="o">=</span> <span class="n">ClassificationCorpus</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> 
+                              <span class="n">test_file</span><span class="o">=</span><span class="s">'test.txt'</span><span class="p">,</span> 
+                              <span class="n">dev_file</span><span class="o">=</span><span class="s">'dev.txt'</span><span class="p">,</span> 
+                              <span class="n">train_file</span><span class="o">=</span><span class="s">'train.txt'</span><span class="p">)</span>  
+</code></pre></div></div>
+<p>After loading the corpus, we will need to initialize the word and document embeddings. Flair offer many embeddings including GloVe, and contextualized <a href="https://github.com/flairNLP/flair/blob/master/resources/docs/embeddings/FLAIR_EMBEDDINGS.md">Flair embeddings</a>.</p>
+
+<p>We will be initializing three word embeddings and one document embedding for our classifier:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">word_embeddings</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">WordEmbeddings</span><span class="p">(</span><span class="s">'glove'</span><span class="p">),</span> 
+                    <span class="n">FlairEmbeddings</span><span class="p">(</span><span class="s">'news-forward-fast'</span><span class="p">),</span> 
+                    <span class="n">FlairEmbeddings</span><span class="p">(</span><span class="s">'news-backward-fast'</span><span class="p">)</span>
+                  <span class="p">]</span>
+<span class="n">doc_embeddings</span> <span class="o">=</span> <span class="n">DocumentRNNEmbeddings</span><span class="p">(</span><span class="n">word_embeddings</span><span class="p">,</span> <span class="n">hidden_size</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h1 id="training-a-classifier">Training a Classifier</h1>
+<p>Once our corpus and embeddings are created, we can quickly initialize and train our text classifier. The <code class="language-plaintext highlighter-rouge">TextClassifier</code> class will take in the documented embeddings and created corpus as parameters and use the corpus as the label dictionary. We are now ready to train!</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">classifier</span> <span class="o">=</span> <span class="n">TextClassifier</span><span class="p">(</span><span class="n">doc_embeddings</span><span class="p">,</span> <span class="n">label_dictionary</span><span class="o">=</span><span class="n">corpus</span><span class="p">.</span><span class="n">make_label_dictionary</span><span class="p">())</span>
+<span class="c1"># Initialize the model trainer
+</span><span class="n">trainer</span> <span class="o">=</span> <span class="n">ModelTrainer</span><span class="p">(</span><span class="n">classifier</span><span class="p">,</span> <span class="n">corpus</span><span class="p">)</span>
+<span class="c1"># Begin training
+</span><span class="n">trainer</span><span class="p">.</span><span class="n">train</span><span class="p">(</span><span class="s">'../data'</span><span class="p">,</span> <span class="n">max_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</code></pre></div></div>
+<p>Once training is complete, Flair will have generated several files containing data used, and classifier statistics. It will have created a <code class="language-plaintext highlighter-rouge">best-model.pt</code> dataset that is used to rate the performance of our classifier.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Results</span><span class="p">:</span>
+<span class="o">-</span> <span class="n">F</span><span class="o">-</span><span class="n">score</span> <span class="p">(</span><span class="n">micro</span><span class="p">)</span> <span class="mf">0.639</span>
+<span class="o">-</span> <span class="n">F</span><span class="o">-</span><span class="n">score</span> <span class="p">(</span><span class="n">macro</span><span class="p">)</span> <span class="mf">0.6301</span>
+<span class="o">-</span> <span class="n">Accuracy</span> <span class="mf">0.639</span>
+
+<span class="n">By</span> <span class="n">class</span><span class="p">:</span>
+              <span class="n">precision</span>    <span class="n">recall</span>  <span class="n">f1</span><span class="o">-</span><span class="n">score</span>   <span class="n">support</span>
+
+           <span class="mi">2</span>     <span class="mf">0.6362</span>    <span class="mf">0.7476</span>    <span class="mf">0.6874</span>       <span class="mi">531</span>
+           <span class="mi">1</span>     <span class="mf">0.6436</span>    <span class="mf">0.5160</span>    <span class="mf">0.5728</span>       <span class="mi">469</span>
+
+   <span class="n">micro</span> <span class="n">avg</span>     <span class="mf">0.6390</span>    <span class="mf">0.6390</span>    <span class="mf">0.6390</span>      <span class="mi">1000</span>
+   <span class="n">macro</span> <span class="n">avg</span>     <span class="mf">0.6399</span>    <span class="mf">0.6318</span>    <span class="mf">0.6301</span>      <span class="mi">1000</span>
+<span class="n">weighted</span> <span class="n">avg</span>     <span class="mf">0.6397</span>    <span class="mf">0.6390</span>    <span class="mf">0.6337</span>      <span class="mi">1000</span>
+ <span class="n">samples</span> <span class="n">avg</span>     <span class="mf">0.6390</span>    <span class="mf">0.6390</span>    <span class="mf">0.6390</span>      <span class="mi">1000</span>
+</code></pre></div></div>
+<p>Using the configurations in this tutorial, the classifier acheived an F1 score of <strong>0.639</strong>. Due to system constraints, it was not feasible to perform the 150 epochs Flair recommends to achieve <em>state-of-the-art</em> accuracy.</p>
+
+<p>It will also generate in a <code class="language-plaintext highlighter-rouge">final-model.pt</code> file that will be loaded into our <code class="language-plaintext highlighter-rouge">TextClassifier</code> so we can begin predicting labels!</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">TextClassifier</span><span class="p">.</span><span class="n">load</span><span class="p">(</span><span class="s">'../data/final-model.pt'</span><span class="p">)</span>
+</code></pre></div></div>
+<h1 id="using-our-classifier">Using our Classifier</h1>
+<p>Now that we have loaded and trained our classifier, we can now prompt users to send the classifier one or more sentences and get a prediction for whether the sentence is a label 1 or 2.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Predict tags
+</span><span class="n">classifier</span><span class="p">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sentence</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">sentence</span><span class="p">.</span><span class="n">labels</span><span class="p">)</span>
+<span class="n">input_sentence</span> <span class="o">=</span> <span class="nb">input</span><span class="p">(</span><span class="s">'Enter another sentence to parse or exit: '</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">input_sentence</span> <span class="o">!=</span> <span class="s">'exit'</span><span class="p">:</span>
+    <span class="n">predict</span><span class="p">(</span><span class="n">Sentence</span><span class="p">(</span><span class="n">input_sentence</span><span class="p">),</span> <span class="n">classifier</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="nb">exit</span>
+</code></pre></div></div>
+<p>We get the following example output:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Enter another sentence to parse or exit: Terrible and disgusting.
+[1 (0.5097)]
+Enter another sentence to parse or exit: Beautiful shoes!
+[2 (0.5593)]
+Enter another sentence to parse or exit: Yikes.
+[1 (0.52)]
+Enter another sentence to parse or exit: Dont spend your money on this.
+[1 (0.5405)]
+Enter another sentence to parse or exit: Will cherish forever.
+[2 (0.5639)]
+</code></pre></div></div>
+<h1 id="and-thats-it">And thats it!!!</h1>
+<p>To view the source code and demo the project locally, please visit my <a href="https://github.com/uazhlt-ms-program/technical-tutorial-jailsalazar">GitHub</a>!</p>
+<h1 id="related-links">Related Links</h1>
+<p>To learn more about Flair, please visit the <a href="https://github.com/flairNLP/flair">Flair GitHub</a>!</p>
+
+<h1 id="sources">Sources</h1>
+<ul>
+  <li><a href="https://github.com/flairNLP/flair">Flair GitHub</a></li>
+  <li>Akbik, A., Blythe, D., &amp; Vollgraf, R. (2018). Contextual String Embeddings for Sequence Labeling. In COLING   2018, 27th International Conference on Computational Linguistics (pp. 1638–1649).</li>
+  <li>Akbik, A., Bergmann, T., Blythe, D., Rasul, K., Schweter, S., &amp; Vollgraf, R. (2019). FLAIR: An easy-to-use framework for state-of-the-art NLP. In NAACL 2019, 2019 Annual Conference of the North American Chapter of the Association for Computational Linguistics (Demonstrations) (pp. 54–59).</li>
+  <li><a href="https://www.kaggle.com/bittlingmayer/amazonreviews/activity">Amazon Reviews for Sentiment Analysis</a></li>
+</ul>
+
+
+
+      <footer class="site-footer">
+        
+          <span class="site-footer-owner"><a href="https://github.com/jailsalazar/tech-tutorials" target="_blank">tech-tutorials</a> is maintained by <a href="https://github.com/jailsalazar" target="_blank">jailsalazar</a>.</span>
+        
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com" target="_blank">GitHub Pages</a>.</span>
+      </footer>
+    </main>
+  </body>
+</html>

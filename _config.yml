@@ -1,1 +1,4 @@
 theme: jekyll-theme-cayman
+title: Getting Started with Flair
+tab_name: Flair Classifier Tutorial
+description: A tutorial to create a custom review sentiment text classifier using Flair
